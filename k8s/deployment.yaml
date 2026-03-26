@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: log-app
+  template:
+    metadata:
+      labels:
+        app: log-app
+    spec:
+      containers:
+      - name: log-app
+        image: smart-log-app:v1
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: groq-secret
+              key: api-key
+        - name: GROQ_MODEL
+          value: "llama-3.1-8b-instant"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: log-app-service
+spec:
+  selector:
+    app: log-app
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: NodePort
